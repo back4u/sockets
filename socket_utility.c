@@ -29,18 +29,18 @@
  *
  * Common implementation of getting a receive socket sd
  *
- * Return: socket sd or EXIT_FAILURE
+ * Return: socket sd or -1
  */
 
-int create_recv_socket(char *local_ip, char *local_port, int local_socktype)
+int create_recv_socket(char *local_ip, char *local_port, int32_t local_socktype)
 {
 	struct addrinfo hints = {0};
 	struct addrinfo *res;
 	struct sockaddr_storage their_addr = {0};
 	socklen_t addr_size = 0;
-	int ret = -1;
-	int sd = -1;
-	int new_sd = -1;
+	int32_t ret = -1;
+	int32_t sd = -1;
+	int32_t new_sd = -1;
 
 	/* make sure the struct is empty */
 	memset(&hints, 0, sizeof(hints));
@@ -52,21 +52,21 @@ int create_recv_socket(char *local_ip, char *local_port, int local_socktype)
 	ret = getaddrinfo(local_ip, local_port, &hints, &res);
 	if (ret != 0) {
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(ret));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* create socket */
 	sd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sd == -1) {
 		fprintf(stderr, "socket error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* bind socket to port */
 	ret = bind(sd, res->ai_addr, res->ai_addrlen);
 	if (ret == -1) {
 		fprintf(stderr, "bind error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* free linked list */
@@ -78,7 +78,7 @@ int create_recv_socket(char *local_ip, char *local_port, int local_socktype)
 		ret = listen(sd, BACKLOG);
 		if (ret == -1) {
 			fprintf(stderr, "listen error: %s\n", strerror(errno));
-			return EXIT_FAILURE;
+			return -1;
 
 		} else {
 			addr_size = sizeof(their_addr);
@@ -86,7 +86,7 @@ int create_recv_socket(char *local_ip, char *local_port, int local_socktype)
 			new_sd = accept(sd, (struct sockaddr *)&their_addr, &addr_size);
 			if (new_sd == -1) {
 				fprintf(stderr, "accept error: %s\n", strerror(errno));
-				return EXIT_FAILURE;
+				return -1;
 			} else {
 				/* close unused socket sd */
 				close(sd);
@@ -106,16 +106,16 @@ int create_recv_socket(char *local_ip, char *local_port, int local_socktype)
  *
  * Common implementation of getting a send socket sd
  *
- * Return: socket sd or EXIT_FAILURE
+ * Return: socket sd or -1
  */
 
-int create_send_socket(char *local_ip, char *local_port, int local_socktype,
-		               char *remote_ip, char *remote_port, int remote_socktype)
+int create_send_socket(char *local_ip, char *local_port, int32_t local_socktype,
+		               char *remote_ip, char *remote_port, int32_t remote_socktype)
 {
 	struct addrinfo hints = {0};
 	struct addrinfo *res;
-	int ret = -1;
-	int sd = -1;
+	int32_t ret = -1;
+	int32_t sd = -1;
 
 	/* make sure the struct is empty */
 	memset(&hints, 0, sizeof(hints));
@@ -127,14 +127,14 @@ int create_send_socket(char *local_ip, char *local_port, int local_socktype,
 	ret = getaddrinfo(local_ip, local_port, &hints, &res);
 	if (ret != 0) {
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(ret));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* create socket */
 	sd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sd == -1) {
 		fprintf(stderr, "socket error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* make sure the struct is empty */
@@ -147,14 +147,14 @@ int create_send_socket(char *local_ip, char *local_port, int local_socktype,
 	ret = getaddrinfo(remote_ip, remote_port, &hints, &res);
 	if (ret != 0) {
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(ret));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* connect to port */
 	ret = connect(sd, res->ai_addr, res->ai_addrlen);
 	if (ret == -1) {
 		fprintf(stderr, "connect error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* free linked list */
@@ -175,14 +175,14 @@ int create_send_socket(char *local_ip, char *local_port, int local_socktype,
 int get_eth_address(char *eth_name, char *eth_addr)
 {
     struct ifaddrs *ifaddr, *ifa;
-    int ret = -1;
+    int32_t ret = -1;
     char host[IP4_SIZE] = {0};
 
     /* get interface addresses */
     ret = getifaddrs(&ifaddr);
     if (ret == -1) {
 		fprintf(stderr, "getifaddrs error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
     /* check all Ethernet interfaces */
@@ -195,7 +195,7 @@ int get_eth_address(char *eth_name, char *eth_addr)
         if ((strcmp(ifa->ifa_name, eth_name) == 0) && (ifa->ifa_addr->sa_family == AF_INET)) {
         	if (ret != 0) {
         		fprintf(stderr, "getnameinfo error: %s\n", gai_strerror(ret));
-        		return EXIT_FAILURE;
+        		return -1;
         	}
         	strcpy(eth_addr, host);
         	break;
@@ -203,7 +203,7 @@ int get_eth_address(char *eth_name, char *eth_addr)
     }
 
     freeifaddrs(ifaddr);
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 /**
@@ -214,24 +214,24 @@ int get_eth_address(char *eth_name, char *eth_addr)
  *
  * Common implementation of getting a receive socket sd
  *
- * Return: socket sd or EXIT_FAILURE
+ * Return: socket sd or -1
  */
 
-int create_recv_socket_eth(char *eth_name, char *local_port, int local_socktype)
+int create_recv_socket_eth(char *eth_name, char *local_port, int32_t local_socktype)
 {
 	struct addrinfo hints = {0};
 	struct addrinfo *res;
 	struct sockaddr_storage their_addr = {0};
 	socklen_t addr_size = 0;
-	int ret = -1;
-	int sd = -1;
-	int new_sd = -1;
+	int32_t ret = -1;
+	int32_t sd = -1;
+	int32_t new_sd = -1;
 	char local_ip[IP4_SIZE] = {0};
 
 	ret = get_eth_address(eth_name, local_ip);
 	if (ret != 0) {
 		fprintf(stderr, "get_eth_address error\n");
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* make sure the struct is empty */
@@ -244,21 +244,21 @@ int create_recv_socket_eth(char *eth_name, char *local_port, int local_socktype)
 	ret = getaddrinfo(local_ip, local_port, &hints, &res);
 	if (ret != 0) {
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(ret));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* create socket */
 	sd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sd == -1) {
 		fprintf(stderr, "socket error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* bind socket to port */
 	ret = bind(sd, res->ai_addr, res->ai_addrlen);
 	if (ret == -1) {
 		fprintf(stderr, "bind error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* free linked list */
@@ -270,7 +270,7 @@ int create_recv_socket_eth(char *eth_name, char *local_port, int local_socktype)
 		ret = listen(sd, BACKLOG);
 		if (ret == -1) {
 			fprintf(stderr, "listen error: %s\n", strerror(errno));
-			return EXIT_FAILURE;
+			return -1;
 
 		} else {
 			addr_size = sizeof(their_addr);
@@ -278,7 +278,7 @@ int create_recv_socket_eth(char *eth_name, char *local_port, int local_socktype)
 			new_sd = accept(sd, (struct sockaddr *)&their_addr, &addr_size);
 			if (new_sd == -1) {
 				fprintf(stderr, "accept error: %s\n", strerror(errno));
-				return EXIT_FAILURE;
+				return -1;
 			} else {
 				/* close unused socket sd */
 				close(sd);
@@ -298,22 +298,22 @@ int create_recv_socket_eth(char *eth_name, char *local_port, int local_socktype)
  *
  * Common implementation of getting a send socket sd
  *
- * Return: socket sd or EXIT_FAILURE
+ * Return: socket sd or -1
  */
 
-int create_send_socket_eth(char *local_eth_name, char *local_port, int local_socktype,
-		                   char *remote_ip, char *remote_port, int remote_socktype)
+int create_send_socket_eth(char *local_eth_name, char *local_port, int32_t local_socktype,
+		                   char *remote_ip, char *remote_port, int32_t remote_socktype)
 {
 	struct addrinfo hints = {0};
 	struct addrinfo *res;
-	int ret = -1;
-	int sd = -1;
+	int32_t ret = -1;
+	int32_t sd = -1;
 	char local_ip[50] = {0};
 
 	ret = get_eth_address(local_eth_name, local_ip);
 	if (ret != 0) {
 		fprintf(stderr, "get_eth_address error\n");
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* make sure the struct is empty */
@@ -326,21 +326,21 @@ int create_send_socket_eth(char *local_eth_name, char *local_port, int local_soc
 	ret = getaddrinfo(local_ip, local_port, &hints, &res);
 	if (ret != 0) {
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(ret));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* create socket */
 	sd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sd == -1) {
 		fprintf(stderr, "socket error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* bind socket to port */
 	ret = bind(sd, res->ai_addr, res->ai_addrlen);
 	if (ret == -1) {
 		fprintf(stderr, "bind error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* make sure the struct is empty */
@@ -353,14 +353,14 @@ int create_send_socket_eth(char *local_eth_name, char *local_port, int local_soc
 	ret = getaddrinfo(remote_ip, remote_port, &hints, &res);
 	if (ret != 0) {
 		fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(ret));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* connect to port */
 	ret = connect(sd, res->ai_addr, res->ai_addrlen);
 	if (ret == -1) {
 		fprintf(stderr, "connect error: %s\n", strerror(errno));
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	/* free linked list */
