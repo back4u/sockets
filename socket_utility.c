@@ -32,7 +32,7 @@
  * Return: socket sd or -1
  */
 
-int create_recv_socket(char *local_ip, char *local_port, int32_t local_socktype)
+int32_t create_recv_socket(char *local_ip, char *local_port, int32_t local_socktype)
 {
 	struct addrinfo hints = {0};
 	struct addrinfo *res;
@@ -109,7 +109,7 @@ int create_recv_socket(char *local_ip, char *local_port, int32_t local_socktype)
  * Return: socket sd or -1
  */
 
-int create_send_socket(char *local_ip, char *local_port, int32_t local_socktype,
+int32_t create_send_socket(char *local_ip, char *local_port, int32_t local_socktype,
 		               char *remote_ip, char *remote_port, int32_t remote_socktype)
 {
 	struct addrinfo hints = {0};
@@ -172,7 +172,7 @@ int create_send_socket(char *local_ip, char *local_port, int32_t local_socktype,
  * Return: ip address
  */
 
-int get_eth_address(char *eth_name, char *eth_addr)
+int32_t get_eth_address(char *eth_name, char *eth_addr)
 {
     struct ifaddrs *ifaddr, *ifa;
     int32_t ret = -1;
@@ -217,7 +217,7 @@ int get_eth_address(char *eth_name, char *eth_addr)
  * Return: socket sd or -1
  */
 
-int create_recv_socket_eth(char *eth_name, char *local_port, int32_t local_socktype)
+int32_t create_recv_socket_eth(char *eth_name, char *local_port, int32_t local_socktype)
 {
 	struct addrinfo hints = {0};
 	struct addrinfo *res;
@@ -301,7 +301,7 @@ int create_recv_socket_eth(char *eth_name, char *local_port, int32_t local_sockt
  * Return: socket sd or -1
  */
 
-int create_send_socket_eth(char *local_eth_name, char *local_port, int32_t local_socktype,
+int32_t create_send_socket_eth(char *local_eth_name, char *local_port, int32_t local_socktype,
 		                   char *remote_ip, char *remote_port, int32_t remote_socktype)
 {
 	struct addrinfo hints = {0};
